@@ -46,3 +46,4 @@ app.*.map.json
 
 /android/google-services.json
 android/app/google-services.json
+lib/config/spotify_config.dart

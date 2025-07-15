@@ -1,0 +1,10 @@
+class SpotifyConfig {
+  static const String clientId = 'YOUR_CLIENT_ID_HERE';
+  static const String clientSecret = 'YOUR_CLIENT_SECRET_HERE';
+  static const String redirectUri = 'http://127.0.0.1:8888/callback';
+
+  static const String baseUrl = 'https://api.spotify.com/v1';
+  static const String authUrl = 'https://accounts.spotify.com/api/token';
+
+  static const List<String> scopes = [];
+}
