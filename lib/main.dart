@@ -9,7 +9,6 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/splash_screen.dart';
-import 'screens/test_spotify_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +24,7 @@ class MyMusicJournalApp extends StatelessWidget {
   MyMusicJournalApp({Key? key}) : super(key: key);
 
   final GoRouter _router = GoRouter(
-    initialLocation: '/test-spotify',
+    initialLocation: '/splash',
     debugLogDiagnostics: true, // Add debug logging for router
     routes: [
       GoRoute(
@@ -54,13 +53,6 @@ class MyMusicJournalApp extends StatelessWidget {
         builder: (context, state) {
           debugPrint('🧭 Router: Navigating to Home');
           return const HomeScreen();
-        },
-      ),
-      GoRoute(
-        path: '/test-spotify',
-        builder: (context, state) {
-          debugPrint('🧭 Router: Navigating to Test Spotify');
-          return TestSpotifyScreen();
         },
       ),
     ],

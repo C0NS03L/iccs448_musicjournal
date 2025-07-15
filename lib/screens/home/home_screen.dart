@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../journal_tab.dart';
+import '../music_search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -96,15 +98,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ? FloatingActionButton(
                 onPressed: () {
                   debugPrint('➕ FAB tapped on tab $_currentIndex');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        _currentIndex == 0
-                            ? 'Create post coming soon!'
-                            : 'Add journal entry coming soon!',
+                  if (_currentIndex == 1) {
+                    // Journal tab - navigate to music search
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MusicSearchScreen(),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    // Feed tab
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Create post coming soon!')),
+                    );
+                  }
                 },
                 child: const Icon(Icons.add),
               )
@@ -182,57 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildJournalTab(user) {
-    debugPrint('🏠 HomeScreen: Building Journal tab');
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.library_music_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Your Music Journal',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Start logging songs to build your personal music diary',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Coming in Phase 2:',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('• Add songs with Spotify search'),
-                    const Text('• Write notes and moods'),
-                    const Text('• View your listening history'),
-                    const Text('• Private entries'),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const JournalTab();
   }
 
   Widget _buildExploreTab() {
