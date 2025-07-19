@@ -23,6 +23,8 @@ enum Mood {
 class JournalEntry {
   final String id;
   final String userId;
+  final String? userName; // User's display name
+  final String? userPhotoUrl; // User's profile photo URL
   final String trackId;
   final String trackName;
   final String artistName;
@@ -33,10 +35,13 @@ class JournalEntry {
   final int? rating; // 1-5 stars
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isPublic; // Whether this entry is visible to other users
 
   JournalEntry({
     required this.id,
     required this.userId,
+    this.userName,
+    this.userPhotoUrl,
     required this.trackId,
     required this.trackName,
     required this.artistName,
@@ -47,21 +52,27 @@ class JournalEntry {
     this.rating,
     required this.createdAt,
     required this.updatedAt,
+    this.isPublic = true, // Default to public
   });
 
   // Create from Spotify track
   factory JournalEntry.fromSpotifyTrack({
     required String id,
     required String userId,
+    String? userName,
+    String? userPhotoUrl,
     required SpotifyTrack track,
     String? personalNotes,
     Mood? mood,
     int? rating,
+    bool isPublic = true,
   }) {
     final now = DateTime.now();
     return JournalEntry(
       id: id,
       userId: userId,
+      userName: userName,
+      userPhotoUrl: userPhotoUrl,
       trackId: track.id,
       trackName: track.name,
       artistName: track.artistNames,
@@ -72,6 +83,7 @@ class JournalEntry {
       rating: rating,
       createdAt: now,
       updatedAt: now,
+      isPublic: isPublic,
     );
   }
 
@@ -81,6 +93,8 @@ class JournalEntry {
     return JournalEntry(
       id: doc.id,
       userId: data['userId'] ?? '',
+      userName: data['userName'],
+      userPhotoUrl: data['userPhotoUrl'],
       trackId: data['trackId'] ?? '',
       trackName: data['trackName'] ?? '',
       artistName: data['artistName'] ?? '',
@@ -97,6 +111,7 @@ class JournalEntry {
       rating: data['rating'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isPublic: data['isPublic'] ?? true,
     );
   }
 
@@ -104,6 +119,8 @@ class JournalEntry {
   Map<String, dynamic> toFirestore() {
     return {
       'userId': userId,
+      'userName': userName,
+      'userPhotoUrl': userPhotoUrl,
       'trackId': trackId,
       'trackName': trackName,
       'artistName': artistName,
@@ -114,14 +131,24 @@ class JournalEntry {
       'rating': rating,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'isPublic': isPublic,
     };
   }
 
   // Create a copy with updated fields
-  JournalEntry copyWith({String? personalNotes, Mood? mood, int? rating}) {
+  JournalEntry copyWith({
+    String? personalNotes,
+    Mood? mood,
+    int? rating,
+    bool? isPublic,
+    String? userName,
+    String? userPhotoUrl,
+  }) {
     return JournalEntry(
       id: id,
       userId: userId,
+      userName: userName ?? this.userName,
+      userPhotoUrl: userPhotoUrl ?? this.userPhotoUrl,
       trackId: trackId,
       trackName: trackName,
       artistName: artistName,
@@ -132,6 +159,7 @@ class JournalEntry {
       rating: rating ?? this.rating,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      isPublic: isPublic ?? this.isPublic,
     );
   }
 
@@ -148,5 +176,26 @@ class JournalEntry {
     } else {
       return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
     }
+  }
+
+  // Get user display name or fallback
+  String get displayUserName {
+    if (userName != null && userName!.isNotEmpty) {
+      return userName!;
+    }
+    return 'User ${userId.substring(0, 8)}...';
+  }
+
+  // Get user initials for avatar
+  String get userInitials {
+    if (userName != null && userName!.isNotEmpty) {
+      final parts = userName!.split(' ');
+      if (parts.length >= 2) {
+        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      } else {
+        return userName!.substring(0, 2).toUpperCase();
+      }
+    }
+    return userId.substring(0, 2).toUpperCase();
   }
 }

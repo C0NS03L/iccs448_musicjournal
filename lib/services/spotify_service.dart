@@ -144,6 +144,37 @@ class SpotifyService {
     }
   }
 
+  static Future<List<SpotifyTrack>> getPlaylistTracks(
+    String playlistId, {
+    int limit = 20,
+  }) async {
+    final token = await _getAccessToken();
+    final uri = Uri.parse(
+      'https://api.spotify.com/v1/playlists/$playlistId/tracks?limit=$limit',
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final items = data['items'] as List;
+      return items.map((item) {
+        final trackJson = item['track'];
+        return SpotifyTrack.fromJson(trackJson);
+      }).toList();
+    } else {
+      throw Exception(
+        'SpotifyService: Get playlist tracks failed: ${response.statusCode} - ${response.body}',
+      );
+    }
+  }
+
   /// Clear stored tokens (useful for testing)
   static void clearTokens() {
     _accessToken = null;

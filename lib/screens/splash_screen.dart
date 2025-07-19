@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _setupAnimation();
-    _checkAuthStatus();
+    _checkAuthAndNavigate();
   }
 
   void _setupAnimation() {
@@ -35,18 +35,46 @@ class _SplashScreenState extends State<SplashScreen>
     _animationController.forward();
   }
 
-  void _checkAuthStatus() async {
-    // Wait for animation and auth state
-    await Future.delayed(const Duration(seconds: 3));
+  Future<void> _checkAuthAndNavigate() async {
+    // Wait for animation AND auth initialization
+    await Future.delayed(const Duration(seconds: 1));
 
-    if (mounted) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!mounted) return;
 
-      if (authProvider.isAuthenticated) {
-        context.go('/home');
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Wait for auth provider to fully initialize
+    while (authProvider.isLoading && mounted) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    if (!mounted) return;
+
+    debugPrint('🔍 SplashScreen: Auth Status: ${authProvider.isAuthenticated}');
+    debugPrint('🔍 SplashScreen: Is Loading: ${authProvider.isLoading}');
+    debugPrint(
+      '🔍 SplashScreen: Current User: ${authProvider.currentUser?.email}',
+    );
+
+    // Check if user is already authenticated (persisted login)
+    if (authProvider.isAuthenticated && authProvider.currentUser != null) {
+      final user = authProvider.currentUser!;
+
+      debugPrint(
+        '🔍 SplashScreen: Onboarding Completed: ${user.onboardingCompleted}',
+      );
+
+      // User is logged in - check onboarding status
+      if (!user.onboardingCompleted) {
+        debugPrint('💫 SplashScreen: Existing user needs onboarding');
+        context.go('/onboarding');
       } else {
-        context.go('/login');
+        debugPrint('🏠 SplashScreen: Existing user going to home');
+        context.go('/home');
       }
+    } else {
+      debugPrint('🔐 SplashScreen: No authenticated user - going to login');
+      context.go('/login');
     }
   }
 

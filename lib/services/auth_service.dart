@@ -6,11 +6,50 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Get current user
   User? get currentUser => _auth.currentUser;
 
-  // Auth state changes stream
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  Future<Map<String, String?>> getUserInfo(String userId) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('users').doc(userId).get();
+
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return {'displayName': data['displayName'] as String?};
+      }
+
+      if (userId == _auth.currentUser?.uid) {
+        return {'displayName': _auth.currentUser?.displayName};
+      }
+
+      return {'displayName': null};
+    } catch (e) {
+      print('Error getting user info for $userId: $e');
+      return {'displayName': null};
+    }
+  }
+
+  Future<Map<String, Map<String, String?>>> getMultipleUsersInfo(
+    List<String> userIds,
+  ) async {
+    try {
+      final result = <String, Map<String, String?>>{};
+
+      final uniqueUserIds = userIds.toSet().toList();
+
+      for (String userId in uniqueUserIds) {
+        final userInfo = await getUserInfo(userId);
+        result[userId] = userInfo;
+      }
+
+      return result;
+    } catch (e) {
+      print('Error getting multiple users info: $e');
+      return {};
+    }
+  }
 
   // Sign up with email and password
   Future<UserCredential?> signUpWithEmailAndPassword({

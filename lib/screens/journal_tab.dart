@@ -8,8 +8,70 @@ import 'music_search_screen.dart';
 import 'add_journal_entry_screen.dart';
 import '../services/spotify_service.dart';
 
-class JournalTab extends StatelessWidget {
+class JournalTab extends StatefulWidget {
   const JournalTab({Key? key}) : super(key: key);
+
+  @override
+  State<JournalTab> createState() => _JournalTabState();
+}
+
+class _JournalTabState extends State<JournalTab> {
+  String _searchText = '';
+  Mood? _selectedMood;
+  int? _selectedRating;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildFilterChips() {
+    return Wrap(
+      spacing: 8,
+      children: [
+        ChoiceChip(
+          label: const Text('All'),
+          selected: _selectedMood == null,
+          onSelected: (_) => setState(() => _selectedMood = null),
+        ),
+        ...Mood.values.map(
+          (mood) => ChoiceChip(
+            label: Text(mood.displayName),
+            selected: _selectedMood == mood,
+            onSelected: (_) => setState(() => _selectedMood = mood),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRatingFilter() {
+    return Row(
+      children: [
+        ChoiceChip(
+          label: const Text('Any'),
+          selected: _selectedRating == null,
+          onSelected: (_) => setState(() => _selectedRating = null),
+        ),
+        ...List.generate(5, (i) {
+          int rating = i + 1;
+          return ChoiceChip(
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                rating,
+                (j) => const Icon(Icons.star, size: 16, color: Colors.amber),
+              ),
+            ),
+            selected: _selectedRating == rating,
+            onSelected: (_) => setState(() => _selectedRating = rating),
+          );
+        }),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,105 +82,101 @@ class JournalTab extends StatelessWidget {
       return const Center(child: Text('Please log in to view your journal'));
     }
 
-    return StreamBuilder<List<JournalEntry>>(
-      stream: JournalService.getUserEntries(userId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(height: 16),
-                Text('Error loading journal entries'),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    // Trigger rebuild
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
+    return Column(
+      children: [
+        // Search Bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search by song, artist, or notes...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon:
+                  _searchController.text.isNotEmpty
+                      ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchText = '');
+                        },
+                      )
+                      : null,
             ),
-          );
-        }
-
-        final entries = snapshot.data ?? [];
-
-        if (entries.isEmpty) {
-          return _buildEmptyState(context);
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: entries.length,
-          itemBuilder: (context, index) {
-            final entry = entries[index];
-            return _buildEntryCard(context, entry);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.library_music_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Your Music Journal',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Start building your personal soundtrack by adding songs that move you',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MusicSearchScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Add Your First Song'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ],
+            onChanged:
+                (val) => setState(() => _searchText = val.trim().toLowerCase()),
+          ),
         ),
-      ),
+        // Mood Filter
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildFilterChips(),
+          ),
+        ),
+        // Rating Filter
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: _buildRatingFilter(),
+          ),
+        ),
+        // Entries
+        Expanded(
+          child: StreamBuilder<List<JournalEntry>>(
+            stream: JournalService.getUserEntries(userId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error loading entries'));
+              }
+              final entries = snapshot.data ?? [];
+
+              // Filter entries
+              final filtered =
+                  entries.where((entry) {
+                    // Search
+                    final searchMatch =
+                        _searchText.isEmpty ||
+                        entry.trackName.toLowerCase().contains(_searchText) ||
+                        entry.artistName.toLowerCase().contains(_searchText) ||
+                        entry.personalNotes?.toLowerCase().contains(
+                              _searchText,
+                            ) ==
+                            true;
+
+                    // Mood filter
+                    final moodMatch =
+                        _selectedMood == null || entry.mood == _selectedMood;
+
+                    // Rating filter
+                    final ratingMatch =
+                        _selectedRating == null ||
+                        entry.rating == _selectedRating;
+
+                    return searchMatch && moodMatch && ratingMatch;
+                  }).toList();
+
+              if (filtered.isEmpty) {
+                return Center(child: Text('No journal entries found.'));
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final entry = filtered[index];
+                  return _buildEntryCard(context, entry);
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -136,7 +194,7 @@ class JournalTab extends StatelessWidget {
               // Header with track info
               Row(
                 children: [
-                  // Album art
+                  // Album art - UPDATED
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: SizedBox(
@@ -153,7 +211,13 @@ class JournalTab extends StatelessWidget {
                                           Theme.of(
                                             context,
                                           ).colorScheme.surfaceVariant,
-                                      child: const Icon(Icons.music_note),
+                                      child: Icon(
+                                        Icons.music_note,
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                      ),
                                     ),
                                 errorWidget:
                                     (context, url, error) => Container(
@@ -161,7 +225,13 @@ class JournalTab extends StatelessWidget {
                                           Theme.of(
                                             context,
                                           ).colorScheme.surfaceVariant,
-                                      child: const Icon(Icons.music_note),
+                                      child: Icon(
+                                        Icons.music_note,
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
+                                      ),
                                     ),
                               )
                               : Container(
@@ -169,7 +239,13 @@ class JournalTab extends StatelessWidget {
                                     Theme.of(
                                       context,
                                     ).colorScheme.surfaceVariant,
-                                child: const Icon(Icons.music_note),
+                                child: Icon(
+                                  Icons.music_note,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                ),
                               ),
                     ),
                   ),
@@ -230,7 +306,7 @@ class JournalTab extends StatelessWidget {
                               size: 16,
                               color:
                                   index < entry.rating!
-                                      ? Colors.amber
+                                      ? Theme.of(context).colorScheme.primary
                                       : Theme.of(
                                         context,
                                       ).colorScheme.onSurface.withOpacity(0.3),
@@ -250,7 +326,7 @@ class JournalTab extends StatelessWidget {
                 ],
               ),
 
-              // Notes preview
+              // Notes preview - UPDATED
               if (entry.personalNotes != null &&
                   entry.personalNotes!.isNotEmpty) ...[
                 const SizedBox(height: 12),

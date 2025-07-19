@@ -149,4 +149,24 @@ class AuthProvider with ChangeNotifier {
     _clearError();
     notifyListeners();
   }
+
+  Future<UserModel?> getUserDocument(String uid) async {
+    try {
+      return await _authService.getUserDocument(uid);
+    } catch (e) {
+      debugPrint('❌ AuthProvider: Error getting user document: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateUserDocument(String uid, Map<String, dynamic> data) async {
+    try {
+      await _authService.updateUserDocument(uid, data);
+      await _loadUserData(uid);
+    } catch (e) {
+      debugPrint('❌ AuthProvider: Error updating user document: $e');
+      _errorMessage = 'Failed to update user data: $e';
+      notifyListeners();
+    }
+  }
 }

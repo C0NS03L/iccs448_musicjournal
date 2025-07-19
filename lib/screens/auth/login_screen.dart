@@ -34,7 +34,26 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      context.go('/home');
+      // 🎯 NEW: Check onboarding status after successful login
+      final user = authProvider.currentUser;
+
+      if (user != null) {
+        debugPrint('🔑 Login: User logged in: ${user.email}');
+        debugPrint(
+          '🔑 Login: Onboarding completed: ${user.onboardingCompleted}',
+        );
+
+        if (!user.onboardingCompleted) {
+          debugPrint('💫 Login: Redirecting to onboarding');
+          context.go('/onboarding');
+        } else {
+          debugPrint('🏠 Login: Redirecting to home');
+          context.go('/home');
+        }
+      } else {
+        // Fallback - shouldn't happen but just in case
+        context.go('/home');
+      }
     }
   }
 

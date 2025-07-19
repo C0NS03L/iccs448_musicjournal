@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../create_post_screen.dart';
+import '../feed_tab.dart';
 import '../journal_tab.dart';
 import '../music_search_screen.dart';
+import '../analytics_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -29,11 +33,14 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(_getTitle()),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
+            icon: const Icon(Icons.bar_chart_rounded),
+            tooltip: 'Insights & Analytics',
             onPressed: () {
-              debugPrint('🔔 Notifications tapped');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications coming soon!')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AnalyticsDashboardScreen(),
+                ),
               );
             },
           ),
@@ -55,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _buildFeedTab(user),
               _buildJournalTab(user),
-              _buildExploreTab(),
               _buildProfileTab(user),
             ],
           );
@@ -82,11 +88,6 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Journal',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.explore_outlined),
-            activeIcon: Icon(Icons.explore),
-            label: 'Explore',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Profile',
@@ -107,9 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   } else {
-                    // Feed tab
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Create post coming soon!')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreatePostScreen(),
+                      ),
                     );
                   }
                 },
@@ -126,8 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return 'My Journal';
       case 2:
-        return 'Explore';
-      case 3:
         return 'Profile';
       default:
         return 'MyMusicJournal';
@@ -136,114 +137,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFeedTab(user) {
     debugPrint('🏠 HomeScreen: Building Feed tab');
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.music_note_rounded,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Welcome, ${user?.displayName ?? user?.email?.split('@')[0] ?? 'Music Lover'}!',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your musical feed will appear here',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Coming in Phase 4:',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('• Friend activity'),
-                    const Text('• Shared playlists'),
-                    const Text('• Music reviews'),
-                    const Text('• Trending songs'),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const FeedTab();
   }
 
   Widget _buildJournalTab(user) {
     return const JournalTab();
-  }
-
-  Widget _buildExploreTab() {
-    debugPrint('🏠 HomeScreen: Building Explore tab');
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.explore_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Discover Music',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Find new music and discover what others are listening to',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Coming in Phase 2 & 4:',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('• Spotify music search'),
-                    const Text('• Trending songs'),
-                    const Text('• Friend recommendations'),
-                    const Text('• Genre exploration'),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildProfileTab(user) {
@@ -293,81 +191,30 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Stats Cards
-          Row(
-            children: [
-              Expanded(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Text(
-                          '0',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const Text('Journal Entries'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Text(
-                          '0',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const Text('Following'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Account Actions
+          // Account Actions - Cleaned up
           Card(
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: const Text('Edit Profile'),
+                  leading: const Icon(Icons.settings),
+                  title: const Text('Settings & Preferences'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Edit profile coming soon!'),
-                      ),
-                    );
+                    context.push('/settings');
                   },
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.favorite_outline),
-                  title: const Text('Favorite Genres'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Favorite genres coming soon!'),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Sign Out'),
+                  leading: Icon(
+                    Icons.logout,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  title: Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                   onTap: () => _handleSignOut(),
                 ),
               ],
@@ -394,7 +241,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Sign Out'),
+                child: Text(
+                  'Sign Out',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ),
             ],
           ),
@@ -403,6 +253,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (confirmed == true && mounted) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.signOut();
+
+      // Navigate to login after sign out
+      if (mounted) {
+        context.go('/login');
+      }
     }
   }
 }
