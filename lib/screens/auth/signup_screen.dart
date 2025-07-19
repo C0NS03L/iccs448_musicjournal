@@ -43,7 +43,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
 
     if (success && mounted) {
-      context.go('/home');
+      context.go('/login');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully! Please sign in.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     }
   }
 
