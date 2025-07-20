@@ -9,6 +9,8 @@ class AuthProvider with ChangeNotifier {
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -24,7 +26,6 @@ class AuthProvider with ChangeNotifier {
     debugPrint('🔧 AuthProvider: Setting up auth listener...');
     _authService.authStateChanges.listen((User? user) async {
       debugPrint('🔧 AuthProvider: Auth state changed - User: ${user?.uid}');
-
       if (user != null) {
         debugPrint('🔧 AuthProvider: Loading user data for ${user.uid}');
         await _loadUserData(user.uid);
@@ -34,6 +35,8 @@ class AuthProvider with ChangeNotifier {
         _currentUser = null;
         notifyListeners();
       }
+      _isInitialized = true;
+      notifyListeners();
     });
   }
 

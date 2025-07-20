@@ -43,12 +43,10 @@ class _SplashScreenState extends State<SplashScreen>
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Wait for auth provider to fully initialize
-    while (authProvider.isLoading && mounted) {
+    while (!authProvider.isInitialized) {
       await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
     }
-
-    if (!mounted) return;
 
     debugPrint('🔍 SplashScreen: Auth Status: ${authProvider.isAuthenticated}');
     debugPrint('🔍 SplashScreen: Is Loading: ${authProvider.isLoading}');
